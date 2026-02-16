@@ -13,7 +13,7 @@ class MplCanvas(FigureCanvasQTAgg):
         super(MplCanvas, self).__init__(self.fig)
         self.setParent(parent)
 
-def _build_filter_clause(filters):
+def _build_filter_clause(filters, unit_col='m.excavation_unit_id', text_cols=None):
     """Constrói a cláusula WHERE e os parâmetros baseados nos filtros hierárquicos."""
     clauses = []
     params = []
@@ -34,14 +34,14 @@ def _build_filter_clause(filters):
         params.append(filters['assemblage_id'])
         
     if filters.get('excavation_unit_id'):
-        clauses.append("m.excavation_unit_id = ?")
+        clauses.append(f"{unit_col} = ?")
         params.append(filters['excavation_unit_id'])
 
-    if filters.get('text_filter'):
-        # Filtro genérico de texto (ajustado para Material)
+    if filters.get('text_filter') and text_cols:
         text = f"%{filters['text_filter']}%"
-        clauses.append("(m.material_type LIKE ? OR m.material_description LIKE ? OR m.notes LIKE ?)")
-        params.extend([text, text, text])
+        or_clauses = " OR ".join([f"{col} LIKE ?" for col in text_cols])
+        clauses.append(f"({or_clauses})")
+        params.extend([text] * len(text_cols))
 
     where_clause = " AND ".join(clauses)
     if where_clause:
@@ -51,7 +51,7 @@ def _build_filter_clause(filters):
 
 def plot_material_types(db, filters, canvas, settings=None):
     """Gera gráfico de barras por tipo de material."""
-    where, params = _build_filter_clause(filters)
+    where, params = _build_filter_clause(filters, unit_col='m.excavation_unit_id')
     
     query = f"""
         SELECT m.material_type, COUNT(*) as count
@@ -62,14 +62,24 @@ def plot_material_types(db, filters, canvas, settings=None):
         {where}
         GROUP BY m.material_type
         ORDER BY count DESC
-        LIMIT 20
     """
 
     data = db.execute_query(query, tuple(params))
 
     canvas.axes.clear()
+    
+    title = "Distribuição por Tipo de Material"
+    xlabel = "Tipo de Material"
+    ylabel = "Contagem"
+    bar_width = 0.8
+
     if settings:
-        canvas.fig.set_size_inches(settings.get('width', 10), settings.get('height', 6))
+        canvas.fig.set_size_inches(settings.get('width', 10), settings.get('height', 5.6))
+        canvas.setMinimumSize(int(settings.get('width', 10) * canvas.fig.dpi), int(settings.get('height', 5.6) * canvas.fig.dpi))
+        if settings.get('title'): title = settings.get('title')
+        if settings.get('xlabel'): xlabel = settings.get('xlabel')
+        if settings.get('ylabel'): ylabel = settings.get('ylabel')
+        bar_width = settings.get('bar_width', 0.8)
 
     if not data:
         canvas.axes.text(0.5, 0.5, "Sem dados para exibir", ha='center')
@@ -79,18 +89,24 @@ def plot_material_types(db, filters, canvas, settings=None):
     labels = [row[0] if row[0] else "Indeterminado" for row in data]
     counts = [row[1] for row in data]
 
-    bar_width = settings.get('bar_width', 0.8) if settings else 0.8
     canvas.axes.bar(labels, counts, color='#4a90e2', width=bar_width)
-    canvas.axes.set_title("Distribuição por Tipo de Material")
-    canvas.axes.set_ylabel("Contagem")
-    canvas.axes.set_xlabel("Tipo de Material")
-    canvas.axes.tick_params(axis='x', rotation=45)
+    
+    if settings and settings.get('show_labels'):
+        for i, v in enumerate(counts):
+            canvas.axes.text(i, v, str(v), ha='center', va='bottom', fontsize=8)
+
+    canvas.axes.set_title(title)
+    canvas.axes.set_ylabel(ylabel)
+    canvas.axes.set_xlabel(xlabel)
+    
+    rotation = 90 if settings and settings.get('vertical_xlabel') else 45
+    canvas.axes.tick_params(axis='x', rotation=rotation)
     canvas.fig.tight_layout()
     canvas.draw()
 
 def plot_material_descriptions(db, filters, canvas, settings=None):
     """Gera gráfico de distribuição por descrição de material."""
-    where, params = _build_filter_clause(filters)
+    where, params = _build_filter_clause(filters, unit_col='m.excavation_unit_id')
 
     query = f"""
         SELECT m.material_description, COUNT(*) as count
@@ -101,14 +117,24 @@ def plot_material_descriptions(db, filters, canvas, settings=None):
         {where}
         GROUP BY m.material_description
         ORDER BY count DESC
-        LIMIT 20
     """
 
     data = db.execute_query(query, tuple(params))
 
     canvas.axes.clear()
+    
+    title = "Distribuição por Descrição de Material"
+    xlabel = "Descrição"
+    ylabel = "Contagem"
+    bar_width = 0.8
+
     if settings:
-        canvas.fig.set_size_inches(settings.get('width', 10), settings.get('height', 6))
+        canvas.fig.set_size_inches(settings.get('width', 10), settings.get('height', 5.6))
+        canvas.setMinimumSize(int(settings.get('width', 10) * canvas.fig.dpi), int(settings.get('height', 5.6) * canvas.fig.dpi))
+        if settings.get('title'): title = settings.get('title')
+        if settings.get('xlabel'): xlabel = settings.get('xlabel')
+        if settings.get('ylabel'): ylabel = settings.get('ylabel')
+        bar_width = settings.get('bar_width', 0.8)
 
     if not data:
         canvas.axes.text(0.5, 0.5, "Sem dados para exibir", ha='center')
@@ -118,17 +144,24 @@ def plot_material_descriptions(db, filters, canvas, settings=None):
     labels = [row[0] if row[0] else "Indeterminado" for row in data]
     counts = [row[1] for row in data]
 
-    bar_width = settings.get('bar_width', 0.8) if settings else 0.8
     canvas.axes.bar(labels, counts, color='#50c878', width=bar_width)
-    canvas.axes.set_title("Distribuição por Descrição de Material")
-    canvas.axes.set_ylabel("Contagem")
-    canvas.axes.tick_params(axis='x', rotation=45)
+
+    if settings and settings.get('show_labels'):
+        for i, v in enumerate(counts):
+            canvas.axes.text(i, v, str(v), ha='center', va='bottom', fontsize=8)
+
+    canvas.axes.set_title(title)
+    canvas.axes.set_ylabel(ylabel)
+    canvas.axes.set_xlabel(xlabel)
+    
+    rotation = 90 if settings and settings.get('vertical_xlabel') else 45
+    canvas.axes.tick_params(axis='x', rotation=rotation)
     canvas.fig.tight_layout()
     canvas.draw()
 
 def plot_material_quantities(db, filters, canvas, settings=None):
     """Gera gráfico de distribuição por quantidade de material."""
-    where, params = _build_filter_clause(filters)
+    where, params = _build_filter_clause(filters, unit_col='m.excavation_unit_id')
 
     query = f"""
         SELECT m.quantity, COUNT(*) as count
@@ -144,8 +177,19 @@ def plot_material_quantities(db, filters, canvas, settings=None):
     data = db.execute_query(query, tuple(params))
 
     canvas.axes.clear()
+    
+    title = "Distribuição por Quantidade de Material"
+    xlabel = "Quantidade"
+    ylabel = "Contagem"
+    bar_width = 0.8
+
     if settings:
-        canvas.fig.set_size_inches(settings.get('width', 10), settings.get('height', 6))
+        canvas.fig.set_size_inches(settings.get('width', 10), settings.get('height', 5.6))
+        canvas.setMinimumSize(int(settings.get('width', 10) * canvas.fig.dpi), int(settings.get('height', 5.6) * canvas.fig.dpi))
+        if settings.get('title'): title = settings.get('title')
+        if settings.get('xlabel'): xlabel = settings.get('xlabel')
+        if settings.get('ylabel'): ylabel = settings.get('ylabel')
+        bar_width = settings.get('bar_width', 0.8)
 
     if not data:
         canvas.axes.text(0.5, 0.5, "Sem dados para exibir", ha='center')
@@ -155,37 +199,23 @@ def plot_material_quantities(db, filters, canvas, settings=None):
     labels = [str(row[0]) if row[0] is not None else "N/A" for row in data]
     counts = [row[1] for row in data]
 
-    bar_width = settings.get('bar_width', 0.8) if settings else 0.8
     canvas.axes.bar(labels, counts, color='#e74c3c', width=bar_width)
-    canvas.axes.set_title("Distribuição por Quantidade de Material")
-    canvas.axes.set_ylabel("Contagem")
-    canvas.axes.set_xlabel("Quantidade")
+
+    if settings and settings.get('show_labels'):
+        for i, v in enumerate(counts):
+            canvas.axes.text(i, v, str(v), ha='center', va='bottom', fontsize=8)
+
+    canvas.axes.set_title(title)
+    canvas.axes.set_ylabel(ylabel)
+    canvas.axes.set_xlabel(xlabel)
+    
+    rotation = 90 if settings and settings.get('vertical_xlabel') else 45
+    canvas.axes.tick_params(axis='x', rotation=rotation)
     canvas.fig.tight_layout()
     canvas.draw()
 
 def plot_unit_counts(db, filters, canvas, settings=None):
     """Gera gráfico de contagem de materiais por unidade de escavação."""
-    # Filtros para unidade são ligeiramente diferentes na estrutura WHERE se filtrarmos a tabela Unit diretamente,
-    # mas aqui queremos contar Specimens POR Unit.
-    
-    # Reutiliza a lógica, mas o GROUP BY é na Unidade
-    where, params = _build_filter_clause(filters)
-    
-    query = f"""
-        SELECT u.name, COUNT(m.id) as count
-        FROM ExcavationUnit u
-        LEFT JOIN Material m ON u.id = m.excavation_unit_id
-        JOIN Assemblage a ON u.assemblage_id = a.id
-        JOIN Collection c ON a.collection_id = c.id
-        {where.replace('m.excavation_unit_id', 'u.id') if where else ''} 
-        GROUP BY u.name
-        ORDER BY count DESC
-        LIMIT 20
-    """
-    # Nota: O replace acima é um ajuste rápido pois _build_filter_clause assume alias 's' para specimen linkado a unit.
-    # Se o filtro vier de 'excavation_unit_id', ele usa 's.excavation_unit_id'. 
-    # Para contar por unidade, precisamos garantir que o filtro de unidade (se houver) se aplique a 'u.id'.
-    
     # Ajuste manual simples para garantir integridade dos filtros de unidade na query de agregação
     clauses = []
     q_params = []
@@ -215,14 +245,24 @@ def plot_unit_counts(db, filters, canvas, settings=None):
         {where_clause}
         GROUP BY u.id
         ORDER BY count DESC
-        LIMIT 20
     """
 
     data = db.execute_query(query, tuple(q_params))
 
     canvas.axes.clear()
+    
+    title = "Densidade de Materiais por Unidade"
+    xlabel = "Unidade"
+    ylabel = "Total de Materiais"
+    bar_width = 0.8
+
     if settings:
-        canvas.fig.set_size_inches(settings.get('width', 10), settings.get('height', 6))
+        canvas.fig.set_size_inches(settings.get('width', 10), settings.get('height', 5.6))
+        canvas.setMinimumSize(int(settings.get('width', 10) * canvas.fig.dpi), int(settings.get('height', 5.6) * canvas.fig.dpi))
+        if settings.get('title'): title = settings.get('title')
+        if settings.get('xlabel'): xlabel = settings.get('xlabel')
+        if settings.get('ylabel'): ylabel = settings.get('ylabel')
+        bar_width = settings.get('bar_width', 0.8)
 
     if not data:
         canvas.axes.text(0.5, 0.5, "Sem dados para exibir", ha='center')
@@ -232,10 +272,73 @@ def plot_unit_counts(db, filters, canvas, settings=None):
     units = [row[0] for row in data]
     counts = [row[1] for row in data]
 
-    bar_width = settings.get('bar_width', 0.8) if settings else 0.8
     canvas.axes.bar(units, counts, color='#9b59b6', width=bar_width)
-    canvas.axes.set_title("Densidade de Materiais por Unidade")
-    canvas.axes.set_ylabel("Total de Materiais")
-    canvas.axes.tick_params(axis='x', rotation=45)
+
+    if settings and settings.get('show_labels'):
+        for i, v in enumerate(counts):
+            canvas.axes.text(i, v, str(v), ha='center', va='bottom', fontsize=8)
+
+    canvas.axes.set_title(title)
+    canvas.axes.set_ylabel(ylabel)
+    canvas.axes.set_xlabel(xlabel)
+    
+    rotation = 90 if settings and settings.get('vertical_xlabel') else 45
+    canvas.axes.tick_params(axis='x', rotation=rotation)
+    canvas.fig.tight_layout()
+    canvas.draw()
+
+def plot_specimen_nisp(db, filters, canvas, settings=None):
+    """Gera gráfico NISP (Number of Identified Specimens) por Taxon."""
+    # Usa 's' como alias para Specimen e 's.excavation_unit_id' para filtro de unidade
+    where, params = _build_filter_clause(filters, unit_col='s.excavation_unit_id')
+    
+    query = f"""
+        SELECT s.taxon, COUNT(*) as count
+        FROM Specimen s
+        LEFT JOIN ExcavationUnit u ON s.excavation_unit_id = u.id
+        LEFT JOIN Assemblage a ON u.assemblage_id = a.id
+        LEFT JOIN Collection c ON a.collection_id = c.id
+        {where}
+        GROUP BY s.taxon
+        ORDER BY count DESC
+    """
+
+    data = db.execute_query(query, tuple(params))
+
+    canvas.axes.clear()
+    
+    title = "NISP por Taxon"
+    xlabel = "Taxon"
+    ylabel = "NISP"
+    bar_width = 0.8
+
+    if settings:
+        canvas.fig.set_size_inches(settings.get('width', 10), settings.get('height', 5.6))
+        canvas.setMinimumSize(int(settings.get('width', 10) * canvas.fig.dpi), int(settings.get('height', 5.6) * canvas.fig.dpi))
+        if settings.get('title'): title = settings.get('title')
+        if settings.get('xlabel'): xlabel = settings.get('xlabel')
+        if settings.get('ylabel'): ylabel = settings.get('ylabel')
+        bar_width = settings.get('bar_width', 0.8)
+
+    if not data:
+        canvas.axes.text(0.5, 0.5, "Sem dados para exibir", ha='center')
+        canvas.draw()
+        return
+
+    labels = [row[0] if row[0] else "Indeterminado" for row in data]
+    counts = [row[1] for row in data]
+
+    canvas.axes.bar(labels, counts, color='#e67e22', width=bar_width)
+
+    if settings and settings.get('show_labels'):
+        for i, v in enumerate(counts):
+            canvas.axes.text(i, v, str(v), ha='center', va='bottom', fontsize=8)
+
+    canvas.axes.set_title(title)
+    canvas.axes.set_ylabel(ylabel)
+    canvas.axes.set_xlabel(xlabel)
+    
+    rotation = 90 if settings and settings.get('vertical_xlabel') else 45
+    canvas.axes.tick_params(axis='x', rotation=rotation)
     canvas.fig.tight_layout()
     canvas.draw()

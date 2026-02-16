@@ -1,5 +1,5 @@
 import sqlite3
-from models import Site, Collection, Assemblage, Material, Level
+from models import Site, Collection, Assemblage, Material, Level, Specimen
 
 class Database:
     def __init__(self, db_path, create_tables=False):
@@ -110,6 +110,49 @@ class Database:
             user TEXT,
             cataloging_date TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (excavation_unit_id) REFERENCES ExcavationUnit(id) ON DELETE CASCADE,
+            FOREIGN KEY (level_id) REFERENCES Level(id) ON DELETE SET NULL
+        );
+        """)
+
+        self.cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Specimen (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            material_id INTEGER,
+            excavation_unit_id INTEGER,
+            level_id INTEGER,
+            uuid TEXT,
+            field_serial TEXT,
+            lab_serial TEXT,
+            class TEXT,
+            bio_order TEXT,
+            family TEXT,
+            genus TEXT,
+            species TEXT,
+            taxon TEXT,
+            element TEXT,
+            symmetry TEXT,
+            portion TEXT,
+            completion TEXT,
+            sex TEXT,
+            weight REAL,
+            fusion TEXT,
+            weathering TEXT,
+            burning TEXT,
+            gnawing TEXT,
+            butchering TEXT,
+            pathology TEXT,
+            dentition TEXT,
+            tooth_wear TEXT,
+            measurements REAL,
+            x_coord REAL,
+            y_coord REAL,
+            z_coord REAL,
+            notes TEXT,
+            photos TEXT,
+            user TEXT,
+            cataloging_date TEXT,
+            FOREIGN KEY (material_id) REFERENCES Material(id) ON DELETE CASCADE,
+            FOREIGN KEY (excavation_unit_id) REFERENCES ExcavationUnit(id) ON DELETE SET NULL,
             FOREIGN KEY (level_id) REFERENCES Level(id) ON DELETE SET NULL
         );
         """)

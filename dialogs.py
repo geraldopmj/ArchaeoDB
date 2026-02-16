@@ -296,6 +296,27 @@ class AddMaterialDialog(QDialog):
         material_data["uuid"] = str(uuid.uuid4())
         try:
             self.db.insert("Material", material_data)
+            
+            # Cria entrada na tabela Specimen apenas se for Fauna
+            if material_data.get("material_type") == "Fauna":
+                material_id = self.db.cursor.lastrowid
+                specimen_data = {
+                    "material_id": material_id,
+                    "excavation_unit_id": material_data.get("excavation_unit_id"),
+                    "level_id": material_data.get("level_id"),
+                    "uuid": material_data.get("uuid"),
+                    "field_serial": material_data.get("field_serial"),
+                    "lab_serial": material_data.get("lab_serial"),
+                    "weight": material_data.get("weight"),
+                    "measurements": material_data.get("measurements"),
+                    "x_coord": material_data.get("x_coord"),
+                    "y_coord": material_data.get("y_coord"),
+                    "z_coord": material_data.get("z_coord"),
+                    "user": material_data.get("user"),
+                    "cataloging_date": material_data.get("cataloging_date") # Se houver, senão DB põe timestamp
+                }
+                self.db.insert("Specimen", specimen_data)
+            
             self.accept()
         except Exception as e:
             QMessageBox.critical(self, "Erro", f"Erro ao inserir no banco de dados: {str(e)}")

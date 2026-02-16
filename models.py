@@ -83,3 +83,40 @@ class Level:
     color: Optional[str] = None
     texture: Optional[str] = None
     description: Optional[str] = None
+
+@dataclass
+class Specimen:
+    id: Optional[int] = None
+    excavation_unit_id: Optional[int] = None
+    level_id: Optional[int] = None
+    uuid: Optional[str] = None
+    field_serial: Optional[str] = None
+    lab_serial: Optional[str] = None
+    class_: Optional[str] = None
+    bio_order: Optional[str] = None
+    family: Optional[str] = None
+    genus: Optional[str] = None
+    species: Optional[str] = None
+    taxon: Optional[str] = None
+    element: Optional[str] = None
+    symmetry: Optional[str] = None
+    portion: Optional[str] = None
+    completion: Optional[str] = None
+    sex: Optional[str] = None
+    weight: Optional[float] = None
+    fusion: Optional[str] = None
+    weathering: Optional[str] = None
+    burning: Optional[str] = None
+    gnawing: Optional[str] = None
+    butchering: Optional[str] = None
+    pathology: Optional[str] = None
+    dentition: Optional[str] = None
+    tooth_wear: Optional[str] = None
+    measurements: Optional[float] = None
+    x_coord: Optional[float] = None
+    y_coord: Optional[float] = None
+    z_coord: Optional[float] = None
+    notes: Optional[str] = None
+    photos: Optional[str] = None
+    user: Optional[str] = None
+    cataloging_date: Optional[str] = None

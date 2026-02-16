@@ -236,7 +236,7 @@ def export_xlsx(db, file_path):
     """Exporta todo o banco de dados para Excel."""
     try:
         workbook = xlsxwriter.Workbook(file_path)
-        tabelas = ['Site', 'Collection', 'Assemblage', 'ExcavationUnit', 'Level', 'Material']
+        tabelas = ['Site', 'Collection', 'Assemblage', 'ExcavationUnit', 'Level', 'Material', 'Specimen']
 
         # Mapas para substituir IDs por Nomes
         sites = db.fetch("Site", "id, name")
@@ -291,6 +291,13 @@ def export_xlsx(db, file_path):
                     # level_id é coluna 2
                     if len(linha_list) > 2 and linha_list[2] in level_map:
                         linha_list[2] = level_map[linha_list[2]]
+                elif tabela == 'Specimen':
+                    # excavation_unit_id é coluna 2
+                    if len(linha_list) > 2 and linha_list[2] in unit_map:
+                        linha_list[2] = unit_map[linha_list[2]]
+                    # level_id é coluna 3
+                    if len(linha_list) > 3 and linha_list[3] in level_map:
+                        linha_list[3] = level_map[linha_list[3]]
 
                 for col_num, valor in enumerate(linha_list):
                     worksheet.write(row_num, col_num, valor)
@@ -427,11 +434,49 @@ def update_database_from_excel(db, xlsx_path):
                                         db.update(table, update_data, {"uuid": record_uuid})
                                 else:
                                     insert_data = {k: v for k, v in data.items() if k != 'id'}
-                                    db.insert(table, insert_data)
+                                    row_id = db.insert(table, insert_data)
+                                    
+                                    # Cria entrada na tabela Specimen se for Fauna
+                                    if insert_data.get("material_type") == "Fauna":
+                                        specimen_data = {
+                                            "material_id": row_id,
+                                            "excavation_unit_id": insert_data.get("excavation_unit_id"),
+                                            "level_id": insert_data.get("level_id"),
+                                            "uuid": insert_data.get("uuid"),
+                                            "field_serial": insert_data.get("field_serial"),
+                                            "lab_serial": insert_data.get("lab_serial"),
+                                            "weight": insert_data.get("weight"),
+                                            "measurements": insert_data.get("measurements"),
+                                            "x_coord": insert_data.get("x_coord"),
+                                            "y_coord": insert_data.get("y_coord"),
+                                            "z_coord": insert_data.get("z_coord"),
+                                            "user": insert_data.get("user"),
+                                            "cataloging_date": insert_data.get("cataloging_date")
+                                        }
+                                        db.insert("Specimen", specimen_data)
                             else:
                                 data['uuid'] = str(uuid.uuid4())
                                 insert_data = {k: v for k, v in data.items() if k != 'id'}
-                                db.insert(table, insert_data)
+                                row_id = db.insert(table, insert_data)
+                                
+                                # Cria entrada na tabela Specimen se for Fauna
+                                if insert_data.get("material_type") == "Fauna":
+                                    specimen_data = {
+                                        "material_id": row_id,
+                                        "excavation_unit_id": insert_data.get("excavation_unit_id"),
+                                        "level_id": insert_data.get("level_id"),
+                                        "uuid": insert_data.get("uuid"),
+                                        "field_serial": insert_data.get("field_serial"),
+                                        "lab_serial": insert_data.get("lab_serial"),
+                                        "weight": insert_data.get("weight"),
+                                        "measurements": insert_data.get("measurements"),
+                                        "x_coord": insert_data.get("x_coord"),
+                                        "y_coord": insert_data.get("y_coord"),
+                                        "z_coord": insert_data.get("z_coord"),
+                                        "user": insert_data.get("user"),
+                                        "cataloging_date": insert_data.get("cataloging_date")
+                                    }
+                                    db.insert("Specimen", specimen_data)
                         else:
                             record_id = data.get('id')
                             if record_id is not None:
@@ -571,9 +616,43 @@ def import_database_from_excel(xlsx_path, db_path):
                                 if update_data:
                                     temp_db.update(table, update_data, {"id": record_id})
                             else:
-                                temp_db.insert(table, data)
+                                row_id = temp_db.insert(table, data)
+                                if table == 'Material' and data.get("material_type") == "Fauna":
+                                    specimen_data = {
+                                        "material_id": row_id,
+                                        "excavation_unit_id": data.get("excavation_unit_id"),
+                                        "level_id": data.get("level_id"),
+                                        "uuid": data.get("uuid"),
+                                        "field_serial": data.get("field_serial"),
+                                        "lab_serial": data.get("lab_serial"),
+                                        "weight": data.get("weight"),
+                                        "measurements": data.get("measurements"),
+                                        "x_coord": data.get("x_coord"),
+                                        "y_coord": data.get("y_coord"),
+                                        "z_coord": data.get("z_coord"),
+                                        "user": data.get("user"),
+                                        "cataloging_date": data.get("cataloging_date")
+                                    }
+                                    temp_db.insert("Specimen", specimen_data)
                         else:
-                            temp_db.insert(table, data)
+                            row_id = temp_db.insert(table, data)
+                            if table == 'Material' and data.get("material_type") == "Fauna":
+                                specimen_data = {
+                                    "material_id": row_id,
+                                    "excavation_unit_id": data.get("excavation_unit_id"),
+                                    "level_id": data.get("level_id"),
+                                    "uuid": data.get("uuid"),
+                                    "field_serial": data.get("field_serial"),
+                                    "lab_serial": data.get("lab_serial"),
+                                    "weight": data.get("weight"),
+                                    "measurements": data.get("measurements"),
+                                    "x_coord": data.get("x_coord"),
+                                    "y_coord": data.get("y_coord"),
+                                    "z_coord": data.get("z_coord"),
+                                    "user": data.get("user"),
+                                    "cataloging_date": data.get("cataloging_date")
+                                }
+                                temp_db.insert("Specimen", specimen_data)
                     except Exception as e:
                         return False, f"Erro na tabela '{table}', linha {i}: {str(e)}"
                         
@@ -581,3 +660,92 @@ def import_database_from_excel(xlsx_path, db_path):
         return True, "Importação concluída com sucesso!"
     except Exception as e:
         return False, f"Erro ao importar do Excel: {str(e)}"
+
+def export_specimens_pdf(db, file_path, columns, visible_ids=None):
+    """Gera um PDF com todos os espécimes."""
+    try:
+        if visible_ids is not None:
+            if not visible_ids:
+                return False, "Nenhum espécime visível para exportar."
+            placeholders = ','.join(['?'] * len(visible_ids))
+            query = f"SELECT * FROM Specimen WHERE id IN ({placeholders})"
+            cursor = db.conn.execute(query, visible_ids)
+            specimens = cursor.fetchall()
+        else:
+            specimens = db.fetch("Specimen")
+
+        if not specimens:
+            return False, "Nenhum espécime para exportar."
+
+        # Mapas para substituir IDs por Nomes
+        units = db.fetch("ExcavationUnit", "id, name")
+        unit_map = {u[0]: u[1] for u in units}
+        
+        levels = db.fetch("Level", "id, level")
+        level_map = {l[0]: l[1] for l in levels}
+        
+        # Mapa para Sítios (Unit ID -> Site Name)
+        query_sites = """
+            SELECT u.id, s.name 
+            FROM ExcavationUnit u
+            JOIN Assemblage a ON u.assemblage_id = a.id
+            JOIN Collection c ON a.collection_id = c.id
+            JOIN Site s ON c.site_id = s.id
+        """
+        cursor = db.conn.execute(query_sites)
+        unit_site_map = {row[0]: row[1] for row in cursor.fetchall()}
+
+        pdf = canvas.Canvas(file_path, pagesize=A4)
+        largura, altura = A4
+        
+        styles = getSampleStyleSheet()
+        style_normal = styles["BodyText"]
+        style_normal.fontName = "Helvetica"
+        style_normal.fontSize = 10
+
+        for i, specimen in enumerate(specimens):
+            titulo = f"Espécime ID: {specimen[0]}"
+            pdf.setFont("Helvetica-Bold", 16)
+            pdf.drawCentredString(largura / 2, altura - 50, titulo)
+
+            specimen_list = list(specimen)
+            
+            # Insere o Nome do Sítio na posição 1
+            unit_id = specimen_list[2] # excavation_unit_id é o índice 2 em Specimen
+            specimen_list.insert(1, unit_site_map.get(unit_id, ""))
+            
+            # Substitui IDs por Nomes (Unidade e Nível) - índices deslocados +1 após inserção do Sítio
+            if specimen_list[3] in unit_map:
+                specimen_list[3] = unit_map[specimen_list[3]]
+            if specimen_list[4] in level_map:
+                specimen_list[4] = level_map[specimen_list[4]]
+
+            dados_tabela = [["Campo", "Valor"]]
+            limit = min(len(columns), len(specimen_list))
+            for j in range(limit):
+                val_str = str(specimen_list[j]) if specimen_list[j] is not None else ""
+                p_val = Paragraph(html.escape(val_str), style_normal)
+                dados_tabela.append([columns[j], p_val])
+
+            tabela = Table(dados_tabela, colWidths=[150, 350])
+            estilo = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP')
+            ])
+            tabela.setStyle(estilo)
+            tabela.wrapOn(pdf, largura, altura)
+            tabela.drawOn(pdf, 50, altura - 25 - len(dados_tabela) * 20)
+
+            if i < len(specimens) - 1:
+                pdf.showPage()
+
+        pdf.save()
+        return True, "PDF gerado com sucesso!"
+    except Exception as e:
+        return False, f"Erro ao gerar PDF: {str(e)}"
