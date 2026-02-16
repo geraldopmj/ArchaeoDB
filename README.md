@@ -5,7 +5,7 @@ ArchaeoDB is software designed to facilitate the management and analysis of data
 ## Documentation
 
 - English README: [README.md](README.md)  
-- Portuguese README (Leia-me): [README.pt-BR.md](LEIA-ME.md)
+- Portuguese README (Leia-me): [LEIA-ME.md](LEIA-ME.md)
 
 ## Key Features
 
@@ -60,3 +60,4 @@ ArchaeoDB is intended for academic, research, and educational purposes in zooarc
 
 For questions, suggestions, or support:  
 geraldo.pmj@gmail.com
+
