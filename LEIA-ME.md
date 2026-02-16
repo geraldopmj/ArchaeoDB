@@ -25,6 +25,71 @@ O ArchaeoDB é um software desenvolvido para facilitar a gestão e análise de d
   - Suporte multilíngue: Inglês, Português e Espanhol.  
   - Temas claro e escuro.  
 
+## Instalação
+
+### 1. Instalar o Python
+
+Baixe e instale o Python 3.10 ou superior em:
+
+https://www.python.org/downloads/
+
+Durante a instalação no Windows, marque a opção:
+
+- "Add Python to PATH"
+
+Após a instalação, verifique no terminal:
+
+```bash
+python --version
+```
+
+---
+
+### 2. Clonar o Repositório
+
+```bash
+git clone https://github.com/seu-usuario/ArchaeoDB.git
+cd ArchaeoDB
+```
+
+---
+
+### 3. Executar o Setup
+
+No Windows, execute:
+
+```bash
+setup.bat
+```
+
+O script `setup.bat` irá:
+
+- Criar um ambiente virtual (venv)
+- Instalar todas as dependências listadas no `requirements.txt`
+
+Aguarde a conclusão da instalação antes de continuar.
+
+---
+
+## Executar o Programa
+
+Após rodar o `setup.bat`, execute:
+
+```bash
+run.bat
+```
+
+O script `run.bat` irá:
+
+- Ativar o ambiente virtual
+- Iniciar a aplicação principal
+
+Importante:
+
+- É obrigatório executar o `setup.bat` pelo menos uma vez antes de usar o `run.bat`.
+- Caso o arquivo `requirements.txt` seja atualizado, execute o `setup.bat` novamente.
+
+
 ## Licença
 
 Este projeto está licenciado sob a **GNU AFFERO GENERAL PUBLIC LICENSE  
@@ -60,3 +125,4 @@ O ArchaeoDB é destinado a fins acadêmicos, científicos e educacionais em zooa
 
 Para dúvidas, sugestões ou suporte:  
 geraldo.pmj@gmail.com
+
