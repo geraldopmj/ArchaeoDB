@@ -1,6 +1,6 @@
 # ArchaeoDB
 
-ArchaeoDB is software designed to facilitate the management of archaeological data and analysis of zooarchaeological data. It allows for the cataloging, visualization, and manipulation of information about bone remains, helping researchers organize and interpret their data.
+ArchaeoDB is software designed to facilitate the management of archaeological data and analysis of zooarchaeological data. It allows for the cataloging, visualization, and manipulation of information about archaeological remains, helping researchers organize and interpret their data.
 
 ## Documentation
 
@@ -114,7 +114,7 @@ Contributions are welcome under the terms of the AGPL-3.0 license. By submitting
 
 ## Intended Use
 
-ArchaeoDB is intended for academic, research, and educational purposes in zooarchaeology and related disciplines. It does not replace formal curation standards, institutional data governance policies, or regulatory compliance requirements.
+ArchaeoDB is intended for academic, research, and educational purposes in archaeology.
 
 ## Contact
 
