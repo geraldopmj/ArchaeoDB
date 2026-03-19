@@ -5,7 +5,7 @@ O ArchaeoDB é um software desenvolvido para facilitar a gestão e análise de d
 ## Documentação
 
 - README em Inglês: [README.md](README.md)  
-- Leia-me em Português: [README.pt-BR.md](README.pt-BR.md)
+- Leia-me em Português: [LEIA-ME.pt-BR.md](README.pt-BR.md)
 
 ## Principais Funcionalidades
 
@@ -45,12 +45,14 @@ python --version
 
 ---
 
-### 2. Clonar o Repositório
+### 2. Clonar/Baixar o Repositório
 
 ```bash
 git clone https://github.com/seu-usuario/ArchaeoDB.git
 cd ArchaeoDB
 ```
+
+ou entào clique em [<> Code e em Download zip](https://github.com/geraldopmj/ArchaeoDB/archive/refs/heads/main.zip)   e descompacte o zip.
 
 ---
 
